@@ -211,7 +211,7 @@ The proposed synthetic dataset is rooted at `/anf-vol1/Project-A/`. It is genera
 
 All sample values must be generated for this lab and safe for public publication. Do not use real people, customer records, employee records, production filenames containing sensitive information, or confidential business material. The expected classification purpose is a test intention, not a guarantee that a scanner will return a specific label; scanner behavior and classification results must be observed and documented.
 
-For generator usage (mapped drive and UNC examples, `-Force` regeneration, and expected directory structure), see [sample-data/README.md](sample-data/README.md). For the test matrix distinguishing intended test signal from actual recorded scan results, see [docs/testing/dataset-test-plan.md](docs/testing/dataset-test-plan.md).
+For generator usage (mapped drive and UNC examples, `-Force` regeneration, and expected directory structure), see [sample-data/README.md](sample-data/README.md). For the test matrix distinguishing intended test signal from actual recorded scan results, see [docs/testing/dataset-test-plan.md](docs/testing/dataset-test-plan.md). An initial Data Classification UI baseline scan against this dataset was completed on 2026-10-01; see [Baseline Scan — 2026-10-01](docs/testing/dataset-test-plan.md#baseline-scan--2026-10-01).
 
 Example MVP policy decisions for this dataset (to be validated against real scan results, not assumed in advance):
 
@@ -316,8 +316,8 @@ Requirements for this milestone:
 2. Create the synthetic test files on ANF (see [Section 7](#7-sample-dataset)).
 3. Deploy NetApp Data Classification manually.
 4. Scan the ANF dataset.
-5. Verify the classification results in the Data Classification UI.
-6. Query those real classification results through the Data Classification API (Milestone 0, above).
+5. Verify the classification results in the Data Classification UI. **Done 2026-10-01** — see [Baseline Scan — 2026-10-01](docs/testing/dataset-test-plan.md#baseline-scan--2026-10-01).
+6. Query those real classification results through the Data Classification API (Milestone 0, above). **Next step, not yet done.**
 
 ### Phase 2 — Secure Agent
 
