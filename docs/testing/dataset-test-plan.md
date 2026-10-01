@@ -43,6 +43,41 @@ in the Test matrix and in [Baseline Scan — 2026-10-01](#baseline-scan--2026-10
 - "Data Subjects" is recorded verbatim as shown in the UI; its precise meaning has not been confirmed against official NetApp documentation.
 - These results reflect one scan of one synthetic dataset at one point in time. They are observations about this specific lab dataset, not general claims about NetApp Data Classification's detection capabilities.
 
+## Evidence
+
+Screenshots below are from the NetApp Data Classification UI for the 2026-10-01
+baseline scan. They support the Test matrix and Baseline Scan sections above;
+the table remains the concise summary and these images are supporting detail,
+not a replacement for it.
+
+### customers.csv
+
+![customers.csv Data Classification summary](images/baseline-2026-10-01/customers-summary.png)
+
+![customers.csv Personal classification detail](images/baseline-2026-10-01/customers-personal-detail.png)
+
+### employees.csv
+
+![employees.csv Data Classification summary](images/baseline-2026-10-01/employees-summary.png)
+
+![employees.csv Personal classification detail](images/baseline-2026-10-01/employees-personal-detail.png)
+
+### acquisition-plan.txt
+
+![acquisition-plan.txt Data Classification summary](images/baseline-2026-10-01/acquisition-plan-summary.png)
+
+### product-info.txt
+
+![product-info.txt Data Classification summary](images/baseline-2026-10-01/product-info-summary.png)
+
+### public-announcement.txt
+
+![public-announcement.txt Data Classification summary](images/baseline-2026-10-01/public-announcement-summary.png)
+
+### control-clean.txt
+
+![control-clean.txt Data Classification summary](images/baseline-2026-10-01/control-clean-summary.png)
+
 ## Baseline Findings
 
 **Finding 1 — PII-oriented files produced Personal classification results.**
