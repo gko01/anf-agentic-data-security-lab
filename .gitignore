@@ -1,0 +1,27 @@
+# Generated synthetic dataset (reproducible via scripts/New-LabDataset.ps1)
+sample-data/Project-A/
+**/Project-A/
+
+# Secrets and environment-specific configuration
+.env
+.env.*
+!.env.example
+*.pfx
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+
+# Logs and local scratch output
+*.log
+.idea/
