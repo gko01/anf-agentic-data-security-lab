@@ -1,0 +1,80 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/anf-agentic-data-security-lab/decision.schema.json",
+  "title": "Offline Agent Policy Decision",
+  "description": "Policy output. classification_metadata is explicitly a mock transcription of the 2026-10-01 UI baseline, not an API response.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "decision",
+    "reason_code",
+    "reason",
+    "evaluated_on",
+    "request",
+    "classification_metadata",
+    "metadata_source",
+    "metadata_is_mock"
+  ],
+  "properties": {
+    "decision": {"type": "string", "enum": ["ALLOW", "DENY"]},
+    "reason_code": {
+      "type": "string",
+      "enum": [
+        "ALLOW",
+        "INVALID_REQUEST",
+        "INVALID_RESOURCE",
+        "REQUEST_NOT_APPROVED",
+        "PROVIDER_ERROR",
+        "METADATA_MISSING",
+        "METADATA_INVALID",
+        "METADATA_EXPIRED",
+        "CLASSIFICATION_NOT_ALLOWED"
+      ]
+    },
+    "reason": {"type": "string", "minLength": 1},
+    "evaluated_on": {"type": "string", "format": "date"},
+    "request": {
+      "anyOf": [
+        {"$ref": "request.schema.json"},
+        {"type": "null"}
+      ]
+    },
+    "classification_metadata": {
+      "anyOf": [
+        {"$ref": "#/$defs/classificationMetadata"},
+        {"type": "null"}
+      ]
+    },
+    "metadata_source": {"type": ["string", "null"]},
+    "metadata_is_mock": {"type": "boolean", "const": true}
+  },
+  "$defs": {
+    "classificationMetadata": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "observed_on",
+        "personal_count",
+        "sensitive_personal_count",
+        "data_subjects",
+        "category",
+        "open_permissions",
+        "personal_details"
+      ],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "observed_on": {"type": "string", "format": "date"},
+        "personal_count": {"type": "integer", "minimum": 0},
+        "sensitive_personal_count": {"type": "integer", "minimum": 0},
+        "data_subjects": {"type": "integer", "minimum": 0},
+        "category": {"type": "string", "minLength": 1},
+        "open_permissions": {"type": "string", "minLength": 1},
+        "personal_details": {
+          "type": "object",
+          "additionalProperties": {"type": "integer", "minimum": 0}
+        }
+      }
+    }
+  }
+}
