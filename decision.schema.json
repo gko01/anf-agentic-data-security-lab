@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Agent Policy Decision v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "policy_version",
+    "request_id",
+    "decision",
+    "reason_code",
+    "reason",
+    "metadata_source",
+    "observed_on"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "policy_version": {
+      "const": "baseline-lab-v1"
+    },
+    "request_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "decision": {
+      "enum": [
+        "ALLOW",
+        "DENY"
+      ]
+    },
+    "reason_code": {
+      "enum": [
+        "INVALID_REQUEST",
+        "AGENT_NOT_ALLOWED",
+        "ACTION_NOT_ALLOWED",
+        "PURPOSE_NOT_ALLOWED",
+        "PROVIDER_ERROR",
+        "METADATA_MISSING",
+        "METADATA_INVALID",
+        "METADATA_FUTURE",
+        "METADATA_STALE",
+        "PERSONAL_DATA",
+        "RESOURCE_NOT_APPROVED",
+        "METADATA_NOT_APPROVED",
+        "EXPLICIT_LAB_ALLOW"
+      ]
+    },
+    "reason": {
+      "type": "string"
+    },
+    "metadata_source": {
+      "enum": [
+        "ui-baseline-mock",
+        null
+      ]
+    },
+    "observed_on": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "decision": {
+            "const": "ALLOW"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "reason_code": {
+            "const": "EXPLICIT_LAB_ALLOW"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "reason_code": {
+            "not": {
+              "const": "EXPLICIT_LAB_ALLOW"
+            }
+          }
+        }
+      }
+    }
+  ]
+}
