@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/anf-agentic-data-security-lab/request.schema.json",
+  "title": "Offline Agent Policy Request",
+  "description": "Strict lab request contract. Classification metadata is provider-owned and cannot be supplied by the requester.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["agent_id", "action", "purpose", "resource"],
+  "properties": {
+    "agent_id": {"type": "string", "minLength": 1},
+    "action": {"type": "string", "minLength": 1},
+    "purpose": {"type": "string", "minLength": 1},
+    "resource": {
+      "type": "string",
+      "enum": [
+        "/vol1/Project-A/control-clean.txt",
+        "/vol1/Project-A/product-info.txt",
+        "/vol1/Project-A/public-announcement.txt",
+        "/vol1/Project-A/customers.csv",
+        "/vol1/Project-A/employees.csv",
+        "/vol1/Project-A/acquisition-plan.txt"
+      ]
+    }
+  }
+}

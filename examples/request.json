@@ -1,0 +1,6 @@
+{
+  "agent_id": "lab-agent",
+  "action": "summarize",
+  "purpose": "summarize-public-product-information",
+  "resource": "/vol1/Project-A/product-info.txt"
+}
