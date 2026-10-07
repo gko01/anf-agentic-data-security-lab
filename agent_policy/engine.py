@@ -71,9 +71,8 @@ class PolicyEngine:
         self,
         request_value: Any,
         provider: ClassificationProvider,
-        today: date | None = None,
     ) -> PolicyDecision:
-        evaluation_date = today or date.today()
+        evaluation_date = date.today()
         try:
             request = PolicyRequest.from_value(request_value)
         except ValidationError:

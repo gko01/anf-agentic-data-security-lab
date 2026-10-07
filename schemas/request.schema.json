@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://example.invalid/anf-agentic-data-security-lab/request.schema.json",
+  "$id": "urn:anf-agentic-data-security-lab:request-schema",
   "title": "Offline Agent Policy Request",
   "description": "Strict lab request contract. Classification metadata is provider-owned and cannot be supplied by the requester.",
   "type": "object",

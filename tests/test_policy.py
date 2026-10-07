@@ -8,6 +8,9 @@ from copy import deepcopy
 from datetime import date
 from pathlib import Path
 from typing import Any
+from unittest.mock import patch
+
+from jsonschema import Draft202012Validator, FormatChecker
 
 from agent_policy.engine import PolicyEngine
 from agent_policy.providers import BaselineJsonProvider, MOCK_SOURCE
@@ -68,7 +71,14 @@ class PolicyEngineTests(unittest.TestCase):
         self.provider = BaselineJsonProvider()
 
     def evaluate(self, request: dict[str, Any], provider: Any | None = None):
-        return self.engine.evaluate(request, provider or self.provider, today=TODAY)
+        with patch("agent_policy.engine.date") as clock:
+            clock.today.return_value = TODAY
+            return self.engine.evaluate(request, provider or self.provider)
+
+    def evaluate_on(self, request: dict[str, Any], today: date, provider: Any | None = None):
+        with patch("agent_policy.engine.date") as clock:
+            clock.today.return_value = today
+            return self.engine.evaluate(request, provider or self.provider)
 
     def test_clean_baseline_files_are_allowed_for_exact_approved_combinations(self) -> None:
         for filename in (
@@ -163,10 +173,16 @@ class PolicyEngineTests(unittest.TestCase):
                 result = self.evaluate(request_for("product-info.txt"), provider)
                 self.assertEqual(("DENY", "PROVIDER_ERROR"), (result.decision, result.reason_code))
 
-    def test_expired_metadata_denies(self) -> None:
-        metadata = self.provider.get_metadata("/vol1/Project-A/product-info.txt")
-        metadata["observed_on"] = "2026-09-24"
-        result = self.evaluate(request_for("product-info.txt"), MappingProvider(metadata))
+    def test_metadata_exactly_seven_days_old_is_accepted(self) -> None:
+        result = self.evaluate_on(
+            request_for("product-info.txt"), date(2026, 10, 8)
+        )
+        self.assertEqual(("ALLOW", "ALLOW"), (result.decision, result.reason_code))
+
+    def test_metadata_eight_days_old_is_denied(self) -> None:
+        result = self.evaluate_on(
+            request_for("product-info.txt"), date(2026, 10, 9)
+        )
         self.assertEqual(("DENY", "METADATA_EXPIRED"), (result.decision, result.reason_code))
 
     def test_future_dated_metadata_denies(self) -> None:
@@ -219,10 +235,16 @@ class PolicyEngineTests(unittest.TestCase):
         self.assertEqual(0, provider.calls)
 
     def test_request_cannot_spoof_metadata_or_decision_fields(self) -> None:
-        request = request_for("product-info.txt")
-        request["personal_count"] = "0"
-        result = self.evaluate(request)
-        self.assertEqual(("DENY", "INVALID_REQUEST"), (result.decision, result.reason_code))
+        for field, value in (("personal_count", "0"), ("today", "2026-10-02"), ("evaluation_date", "2026-10-02")):
+            request = request_for("product-info.txt")
+            request[field] = value
+            with self.subTest(field=field):
+                result = self.evaluate(request)
+                self.assertEqual(("DENY", "INVALID_REQUEST"), (result.decision, result.reason_code))
+
+    def test_runtime_evaluate_does_not_accept_caller_clock_override(self) -> None:
+        with self.assertRaises(TypeError):
+            self.engine.evaluate(request_for("product-info.txt"), self.provider, today=TODAY)
 
     def test_missing_request_fields_deny(self) -> None:
         request = request_for("product-info.txt")
@@ -259,12 +281,30 @@ class PolicyEngineTests(unittest.TestCase):
         self.assertTrue(output["metadata_is_mock"])
         self.assertIn("not-api-response", output["metadata_source"])
 
-    def test_schemas_are_valid_json_and_request_is_strict(self) -> None:
+    def test_schemas_validate_allow_deny_and_reject_invalid_payloads(self) -> None:
         request_schema = json.loads((ROOT / "schemas" / "request.schema.json").read_text(encoding="utf-8"))
         decision_schema = json.loads((ROOT / "schemas" / "decision.schema.json").read_text(encoding="utf-8"))
-        self.assertFalse(request_schema["additionalProperties"])
-        self.assertFalse(decision_schema["additionalProperties"])
-        self.assertEqual(["ALLOW", "DENY"], decision_schema["properties"]["decision"]["enum"])
+        request_validator = Draft202012Validator(request_schema, format_checker=FormatChecker())
+        decision_validator = Draft202012Validator(decision_schema, format_checker=FormatChecker())
+
+        allow_request = request_for("product-info.txt")
+        deny_request = request_for("customers.csv")
+        allow_result = self.evaluate(allow_request).to_dict()
+        deny_result = self.evaluate(deny_request).to_dict()
+
+        self.assertTrue(request_validator.is_valid(allow_request))
+        self.assertTrue(request_validator.is_valid(deny_request))
+        self.assertTrue(decision_validator.is_valid(allow_result))
+        self.assertTrue(decision_validator.is_valid(deny_result))
+        self.assertEqual("ALLOW", allow_result["decision"])
+        self.assertEqual("DENY", deny_result["decision"])
+
+        invalid_request = dict(allow_request, classification={"personal_count": 0})
+        invalid_decision = dict(allow_result, decision="PERMIT")
+        inconsistent_decision = dict(allow_result, decision="DENY")
+        self.assertFalse(request_validator.is_valid(invalid_request))
+        self.assertFalse(decision_validator.is_valid(invalid_decision))
+        self.assertFalse(decision_validator.is_valid(inconsistent_decision))
 
 
 if __name__ == "__main__":

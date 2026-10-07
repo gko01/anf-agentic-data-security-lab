@@ -9,6 +9,7 @@ The MVP does not connect to ANF, NetApp Data Classification, Claude, Streamlit, 
 From the repository root, using Python 3.10 or newer:
 
 ```powershell
+python -m pip install -r requirements-dev.txt
 python -m unittest discover -s tests -v
 python -m agent_policy --baseline-demo < examples/request.json
 ```
@@ -19,15 +20,15 @@ The CLI reads one strict JSON request from standard input and prints one JSON po
 
 - [`schemas/request.schema.json`](../schemas/request.schema.json) defines the exact request properties: `agent_id`, `action`, `purpose`, and `resource`. Additional properties are rejected, so requesters cannot provide or spoof classification metadata or a decision.
 - [`schemas/decision.schema.json`](../schemas/decision.schema.json) defines `ALLOW`/`DENY`, the reason code, the evaluated request, and optional classification metadata.
-- The runtime independently validates the request and provider data. The schemas document the contracts; the Python engine does not require an external JSON Schema package.
+- The runtime independently validates the request and provider data. The tests use the development-only `jsonschema` dependency to validate representative ALLOW/DENY outputs and reject invalid payloads. The runtime package does not import `jsonschema`.
 
 ## Mock metadata provenance
 
-[`baseline.json`](baseline.json) contains transcribed observations from the 2026-10-01 NetApp Data Classification UI baseline documented in [`docs/testing/dataset-test-plan.md`](../docs/testing/dataset-test-plan.md). Its local field names (`personal_count`, `sensitive_personal_count`, `data_subjects_count`, `category`, `open_permissions`, and `personal_details`) are a lab fixture format, **not claimed API field names or a NetApp JSON schema**. `Data Subjects: 1` is preserved as a value only; no semantics are inferred.
+[`baseline.json`](baseline.json) contains transcribed observations from the 2026-10-01 NetApp Data Classification UI baseline documented in [`docs/testing/dataset-test-plan.md`](../docs/testing/dataset-test-plan.md). Its local field names (`personal_count`, `sensitive_personal_count`, `data_subjects`, `category`, `open_permissions`, and `personal_details`) are a lab fixture format, **not claimed API field names or a NetApp JSON schema**. `Data Subjects: 1` is preserved as a value only; no semantics are inferred.
 
 The provider abstraction in [`providers.py`](providers.py) exposes `ClassificationProvider`. The included `BaselineJsonProvider` is local-file only and declares its source as `synthetic-ui-baseline-mock-not-api-response`. It is not an API adapter. The `data_subjects` value preserves the UI's displayed `Data Subjects` value without inferring its meaning. The `open_permissions` value is retained in metadata output for observation but is not used by policy.
 
-Metadata is considered fresh for at most seven calendar days from `observed_on`, inclusive. Missing, malformed, mismatched, future-dated, expired, or unavailable metadata yields `DENY`. The fixed baseline is dated 2026-10-01; after its freshness window the demo intentionally denies until the mock fixture is deliberately refreshed from verified evidence or replaced by a future validated provider.
+Metadata is considered fresh for at most seven calendar days from `observed_on`, inclusive. Missing, malformed, mismatched, future-dated, expired, or unavailable metadata yields `DENY`. The normal `PolicyEngine.evaluate` path always reads the host system date; request fields cannot set or override it. Tests freeze the engine's date source with a test-only mock clock. There is no historical replay option in the runtime or CLI. The host system clock is part of the trusted execution environment. The fixed baseline is dated 2026-10-01; after its freshness window the demo intentionally denies until the mock fixture is deliberately refreshed from verified evidence or replaced by a future validated provider.
 
 ## MVP policy
 
