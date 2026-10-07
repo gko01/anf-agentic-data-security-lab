@@ -285,6 +285,10 @@ OTHERWISE:
 
 Classification labels and flags must be mapped from verified product output into lab policy inputs. Missing, stale, ambiguous, or unavailable classification should fail closed to `DENY` in the MVP; the lab must document that choice. The policy decision must occur **before** sensitive content is provided to Claude.
 
+## Offline Agent Policy Engine MVP
+
+An offline policy-engine MVP now exercises the recorded synthetic UI baseline using an explicitly labelled mock provider. It does not call the Data Classification API or access ANF, and it does not integrate Claude, Streamlit, or MCP. The engine denies by default and only allows exact approved agent/action/purpose/resource tuples with fresh metadata matching the clean baseline; `Personal = 0` alone is not sufficient. See [agent_policy/README.md](agent_policy/README.md) for the contracts, run commands, mock-data provenance, allowlist, and limitations.
+
 ## 11. Implementation Phases
 
 ### Milestone 0 — Data Classification API validation (do this first)

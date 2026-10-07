@@ -1,0 +1,70 @@
+{
+  "fixture_type": "synthetic-ui-baseline-mock-not-api-response",
+  "notice": "MOCK FIXTURE ONLY. These values were transcribed from the manually verified 2026-10-01 NetApp Data Classification UI baseline for the synthetic lab dataset. This file is not an API response, API schema, or live provider result.",
+  "records": [
+    {
+      "path": "/vol1/Project-A/control-clean.txt",
+      "observed_on": "2026-10-01",
+      "personal_count": 0,
+      "sensitive_personal_count": 0,
+      "data_subjects": 0,
+      "category": "Miscellaneous Documents",
+      "open_permissions": "Open to organization",
+      "personal_details": {}
+    },
+    {
+      "path": "/vol1/Project-A/product-info.txt",
+      "observed_on": "2026-10-01",
+      "personal_count": 0,
+      "sensitive_personal_count": 0,
+      "data_subjects": 0,
+      "category": "Miscellaneous Documents",
+      "open_permissions": "Open to organization",
+      "personal_details": {}
+    },
+    {
+      "path": "/vol1/Project-A/public-announcement.txt",
+      "observed_on": "2026-10-01",
+      "personal_count": 0,
+      "sensitive_personal_count": 0,
+      "data_subjects": 0,
+      "category": "Miscellaneous Documents",
+      "open_permissions": "Open to organization",
+      "personal_details": {}
+    },
+    {
+      "path": "/vol1/Project-A/customers.csv",
+      "observed_on": "2026-10-01",
+      "personal_count": 9,
+      "sensitive_personal_count": 0,
+      "data_subjects": 1,
+      "category": "Miscellaneous Spreadsheets",
+      "open_permissions": "Open to organization",
+      "personal_details": {
+        "Email Address": 8
+      }
+    },
+    {
+      "path": "/vol1/Project-A/employees.csv",
+      "observed_on": "2026-10-01",
+      "personal_count": 6,
+      "sensitive_personal_count": 0,
+      "data_subjects": 0,
+      "category": "Miscellaneous Spreadsheets",
+      "open_permissions": "Open to organization",
+      "personal_details": {
+        "Email Address": 6
+      }
+    },
+    {
+      "path": "/vol1/Project-A/acquisition-plan.txt",
+      "observed_on": "2026-10-01",
+      "personal_count": 0,
+      "sensitive_personal_count": 0,
+      "data_subjects": 0,
+      "category": "Services - SOW",
+      "open_permissions": "Open to organization",
+      "personal_details": {}
+    }
+  ]
+}
