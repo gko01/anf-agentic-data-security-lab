@@ -32,6 +32,18 @@ This is related to **Data Security Posture Management (DSPM)**: discovering and 
 
 ## 3. Architecture
 
+### Architecture and security responsibilities (proposed)
+
+![Proposed data-aware AI agent architecture and security responsibility model](docs/images/agentic-ai-architecture-security-responsibilities.png)
+
+*Proposed lab architecture and security responsibility model. The Agent Policy Engine's `ALLOW` / `DENY` decisions are application-level design goals, not verified end-to-end enforcement or decisions returned by NetApp Data Classification. The illustrated ANF Object REST API / S3-compatible access, ACL integration, and identity flow are deferred concepts requiring separate validation; they are not established by the classification API tests.*
+
+### Classification API results and illustrative policy decisions
+
+![NetApp Classification v1.56 API illustration with recorded classification results and proposed ALLOW and DENY decisions](docs/images/agentic-ai-classification-api-illustrative-decisions.png)
+
+*The API results panel summarizes historical, owner-supplied test evidence: `customers.csv` returned 9 personal / 0 sensitive patterns and `COMPLETE`; `product-info.txt` returned 0 personal / 0 sensitive patterns and `COMPLETE`. The `DENY` / `ALLOW` panels are illustrative proposed policy decisions, not verified API authorization results. The PowerShell panel is an illustration, not a runnable test script; its private lab address has been replaced with a placeholder. Use the [API lab and evidence boundary](docs/deployment/06-data-classification-api.md) for the maintained harness, request details, and outstanding repository identity mapping and live replay checks.*
+
 ### MVP architecture (current scope)
 
 The proposed MVP architecture is deliberately narrow. It aims to prove one thing: that real classification metadata from NetApp Data Classification's REST API can drive an `ALLOW` / `DENY` decision for an agent action, evaluated **before** any file content reaches the agent.
