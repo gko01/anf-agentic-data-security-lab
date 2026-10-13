@@ -25,3 +25,7 @@ Thumbs.db
 # Logs and local scratch output
 *.log
 .idea/
+
+# Private Data Classification instance contracts / raw diagnostics
+.local-classification/
+*.har
