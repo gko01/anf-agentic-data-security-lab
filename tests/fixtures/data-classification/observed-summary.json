@@ -1,0 +1,7 @@
+{
+  "provenance": "User-reported historical v1.56 results; anonymized summary, not a captured API response. Exact response envelope and identity field names are unavailable.",
+  "observations": [
+    { "file": "customers.csv", "personal_patterns_count": 9, "sensitive_patterns_count": 0, "status": "COMPLETE" },
+    { "file": "product-info.txt", "personal_patterns_count": 0, "sensitive_patterns_count": 0, "status": "COMPLETE" }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Exploring data-aware access control for Agentic AI using Azure NetApp Files, NetApp Data Classification, MCP, and AI agents.**
 
-> **Project status:** Design document for a proposed learning lab. This repository does not yet implement the architecture described here. Product capabilities and integration paths must be verified against current official documentation before implementation.
+> **Project status:** Proposed learning-lab architecture with owner-reported NetApp Data Classification REST API v1.56 results and a read-only PowerShell test harness. The harness is offline-tested; live reproduction awaits the instance request/response contract. The Agent Policy Engine and end-to-end enforcement remain separate work. See the [API lab and evidence boundary](docs/deployment/06-data-classification-api.md).
 
 > **MVP scope (current focus):** The primary research question for the MVP is: *can NetApp Data Classification provide real data classification context through its API, and can a trusted DSPM-aware policy layer use that context to decide whether an AI agent action should be allowed?* The ANF Object REST API, SMB/NFS ACL integration, and identity impersonation are useful background concepts but are **not required dependencies** for the MVP. They remain documented as deferred/future extensions (see [Section 16](#16-future-ideas)). The MVP outcomes are limited to `ALLOW` and `DENY`; `ALLOW_WITH_REDACTION` is deferred.
 
@@ -34,7 +34,7 @@ This is related to **Data Security Posture Management (DSPM)**: discovering and 
 
 ### MVP architecture (current scope)
 
-The MVP architecture is deliberately narrow. It proves one thing: that real classification metadata from NetApp Data Classification's REST API can drive an `ALLOW` / `DENY` decision for an agent action, evaluated **before** any file content reaches the agent.
+The proposed MVP architecture is deliberately narrow. It aims to prove one thing: that real classification metadata from NetApp Data Classification's REST API can drive an `ALLOW` / `DENY` decision for an agent action, evaluated **before** any file content reaches the agent.
 
 ```mermaid
 flowchart TB
@@ -76,7 +76,7 @@ If this path is built later, the policy check remains an application-level gate,
 
 ## 4. Security Responsibility Model
 
-This full model is background context for how the controls relate to each other long-term. The MVP only implements and tests the **Data Classification** and **Agent Policy** layers; the ANF ACL, Identity/AD, and Agent Identity layers are deferred.
+This full model is background context for how the controls relate to each other long-term. The planned MVP targets the **Data Classification** and **Agent Policy** layers; the ANF ACL, Identity/AD, and Agent Identity layers are deferred.
 
 ```mermaid
 flowchart TB
@@ -98,7 +98,7 @@ These controls answer different questions and are complementary. Identity establ
 
 ## 5. Scenario A (MVP) — Classification-Aware Policy Decision
 
-This is the scenario the MVP actually builds and tests. The policy decision happens **before** any file content reaches Claude. Only `ALLOW` and `DENY` are implemented in the MVP; `ALLOW_WITH_REDACTION` is shown as a deferred outcome.
+This is the scenario the proposed MVP is intended to build and test. The policy decision happens **before** any file content reaches Claude. Only `ALLOW` and `DENY` are planned for the MVP; `ALLOW_WITH_REDACTION` is shown as a deferred outcome.
 
 ```mermaid
 sequenceDiagram
@@ -122,7 +122,7 @@ sequenceDiagram
     end
 ```
 
-Example decisions used to validate this flow:
+Proposed example decisions for future end-to-end validation (not API test results):
 
 | File | Classification | Requested action | Decision |
 |---|---|---|---|
@@ -257,7 +257,7 @@ Exposing these operations as MCP tools, and adding `read_anf_object(path)` for o
 
 ## 10. Policy Model
 
-The MVP implements only two outcomes:
+The proposed MVP policy model defines two outcomes:
 
 - **`ALLOW`** — policy permits the requested action.
 - **`DENY`** — policy blocks the requested action; Claude does not receive the file content.
@@ -296,7 +296,7 @@ NetApp Data Classification
         |
         | REST API
         v
-Python client
+Read-only API client (PowerShell validation first)
         |
         v
 Real classification metadata
@@ -317,7 +317,7 @@ Requirements for this milestone:
 3. Deploy NetApp Data Classification manually.
 4. Scan the ANF dataset.
 5. Verify the classification results in the Data Classification UI. **Done 2026-10-01** — see [Baseline Scan — 2026-10-01](docs/testing/dataset-test-plan.md#baseline-scan--2026-10-01).
-6. Query those real classification results through the Data Classification API (Milestone 0, above). **Next step, not yet done.**
+6. Query those real classification results through the Data Classification API (Milestone 0, above). **Owner-reported v1.56 results recorded; reusable PowerShell reproduction pending the instance contract.** See the [API lab](docs/deployment/06-data-classification-api.md).
 
 ### Phase 2 — Secure Agent
 
@@ -456,7 +456,7 @@ These vendor documentation entry points are starting points for implementation r
 **Confirmed and directly relevant to Milestone 0:**
 
 - [NetApp Data Classification — Learn about Data Classification](https://docs.netapp.com/us-en/data-services-data-classification/concept-classification.html): deployment model, supported data sources (confirms Azure NetApp Files is supported), and scanning concepts.
-- [NetApp Data Classification APIs](https://docs.netapp.com/us-en/data-services-data-classification/api-classification.html): **confirmed** that a REST API exists, covering Investigation, Compliance, Governance, and Configuration areas; confirms the instance exposes its own Swagger/OpenAPI reference at `https://<classification_ip>/documentation`; shows example endpoint and header shapes (`/api/{classification_version}/search/options`, `/api/{classification_version}/actions`, `Authorization: Bearer ...`, `x-agent-id`). The exact endpoint and schema for querying a single file's classification must still be confirmed against the deployed instance's own Swagger reference.
+- [NetApp Data Classification APIs](https://docs.netapp.com/us-en/data-services-data-classification/api-classification.html): **confirmed** that a REST API exists, covering Investigation, Compliance, Governance, and Configuration areas; confirms the instance exposes its own Swagger/OpenAPI reference at `https://<classification_ip>/documentation`; shows example endpoint and header shapes (`/api/{classification_version}/search/options`, `/api/{classification_version}/actions`, `Authorization: Bearer ...`, `x-agent-id`). The owner reports successful v1.56 `/search/files` calls; the full request/response contract must still be captured from the deployed instance for reproducible validation.
 - [Get identifiers (authentication reference linked from the API page)](https://docs.netapp.com/us-en/bluexp-automation/platform/get_identifiers.html): authentication method used by the Data Classification API.
 - [FAQ for NetApp Data Classification](https://docs.netapp.com/us-en/data-services-data-classification/faq-data-classification.html): confirms the REST API exists, confirms data is accessed via authenticated, encrypted API calls, and lists supported file types for PII detection.
 

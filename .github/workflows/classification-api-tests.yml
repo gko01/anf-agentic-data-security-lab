@@ -1,0 +1,25 @@
+name: Classification API offline tests
+on:
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/classification-api-tests.yml'
+  push:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/classification-api-tests.yml'
+permissions:
+  contents: read
+jobs:
+  offline:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test without network or lab credentials
+        shell: pwsh
+        run: ./tests/Test-DataClassificationApi.ps1
