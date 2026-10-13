@@ -1,0 +1,20 @@
+{
+  "total_hits": 2,
+  "files": [
+    {
+      "file_name": "/synthetic/Project-A/customers.csv",
+      "fixture_repository_id": "synthetic-repository",
+      "category": "Miscellaneous Spreadsheets",
+      "personal_patterns_count": 9,
+      "sensitive_patterns_count": 0,
+      "ds_extraction_status": "COMPLETE"
+    },
+    {
+      "file_name": "/synthetic/Project-A/product-info.txt",
+      "fixture_repository_id": "synthetic-repository",
+      "personal_patterns_count": 0,
+      "sensitive_patterns_count": 0,
+      "ds_extraction_status": "COMPLETE"
+    }
+  ]
+}

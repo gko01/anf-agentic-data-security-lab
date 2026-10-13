@@ -1,0 +1,5 @@
+{
+  "findQuery": "product-info.txt",
+  "pagination": { "fromIndex": 0, "size": 10 },
+  "track_total_hits": true
+}

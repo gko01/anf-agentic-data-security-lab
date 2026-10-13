@@ -17,13 +17,20 @@ rows. Zero sensitive-personal patterns does not negate personal data. Zero/zero
 does not establish that a file is public, nonconfidential, authorized, or safe for
 every purpose. `COMPLETE` does not establish freshness.
 
-**Reproduction status: pending instance contract.** The accessible conversation
-reference did not contain the successful request body or response envelope.
-Consequently, this change does not invent a v1.56 query schema. The reusable
-PowerShell transport and validation have been tested offline; their live use
-requires the deployed instance's actual query/pagination and field mappings.
-The observed summary is separate from the deliberately synthetic test contract.
-Do not call this implementation live-verified until the steps below are rerun.
+**Evidence recovered:** the owner supplied prior Swagger/test notes on
+2026-10-14 containing the request body and code that reads the response fields.
+They report successful customers.csv metadata retrieval. The product-info.txt
+counts above were supplied separately by the owner in the lab request; the
+recovered notes show its test command, not its raw result. The notes reference
+screenshots, but no original Swagger images or raw response export were supplied
+for this change. This is historical lab evidence, not a fresh live execution.
+
+The script now uses that recorded v1.56 request and response shape directly.
+Offline tests check both recorded requests and reconstructed response records.
+**Remaining reproduction gap:** the repository identifier field name/type is
+absent from the notes. A verified `-RepositoryPointer` is required, with no guessed
+default or path-only fallback. The hardened script, multi-page behavior and
+repository validation still need a live replay; do not label those live-verified.
 
 This is classification metadata integration, not an Agent Policy Engine. It
 does not read file contents, modify classification, invoke `/actions`, change
@@ -142,53 +149,72 @@ and can expose the bearer token to interception. It never changes a global TLS
 setting. HTTP, URL credentials, base paths, queries, fragments and redirects are
 rejected; supply the Classification HTTPS origin, with an optional port.
 
-## Capture the actual request contract, then search
+## Recorded v1.56 request and response
 
-The missing evidence is the successful `findQuery` rule structure, pagination
-placement/semantics, response array/total fields, and resource identity fields.
-Obtain these from v1.56 Swagger or a successful read-only UI request. Keep values
-private. Do not use the offline `synthetic-contract.json` against NetApp.
+The recovered Swagger-based request for customers.csv is:
 
-Create `.local-classification/instance-contract.json` (ignored by Git) with these
-adapter configuration entries. The entry names below belong to **this lab**, not
-to the NetApp API:
+```json
+{
+  "findQuery": "customers.csv",
+  "pagination": { "fromIndex": 0, "size": 10 },
+  "track_total_hits": true
+}
+```
 
-| Entry | Value to copy/derive from the deployed instance |
+For product-info.txt, change only `findQuery` to `"product-info.txt"`. `findQuery`
+is a **string**, not a rules object. The client does not add unverified
+`query.rules` filters. The request fixtures preserve both recorded bodies.
+
+| Recorded field | Use in this script |
 |---|---|
-| `requestTemplate` | Full successful search JSON object, including `findQuery` and pagination fields; no headers or credentials |
-| `offsetPointer` | JSON pointer to the existing zero-based item-offset field in the body |
-| `limitPointer` | JSON pointer to the existing page-size field in the body |
-| `itemsPointer` | JSON pointer to the response's file array |
-| `totalPointer` | JSON pointer to the response's exact total result count |
-| `pathPointer` | JSON pointer within each file record to its full path |
-| `repositoryPointer` | JSON pointer within each record to a stable repository identifier string |
-| `statusPointer` | JSON pointer within each record to its classification completion status |
+| `pagination.fromIndex` / `pagination.size` | Start at zero; advance by actual returned row count; bound page size |
+| `track_total_hits` | Always `true`, requesting an exact total |
+| `total_hits` / `files` | Nonnegative integer total and file array |
+| `file_name` | Full file path to compare with `ExpectedPath` |
+| `personal_patterns_count` / `sensitive_patterns_count` | Nonnegative integer classification counts |
+| `ds_extraction_status` | Must equal `COMPLETE`; emitted as diagnostic `status` |
 
-JSON pointers use `/` between object keys (`~1` escapes `/`, `~0` escapes `~`).
-Empty pointer selects the root. Array-index traversal is not implemented.
-Counts are expected as numeric `personal_patterns_count` and
-`sensitive_patterns_count` properties on each file record, as reported by the
-owner. If the live schema differs, update the adapter with captured sanitized
-evidence and tests before proceeding. Do not silently substitute missing fields.
+The notes also name `category`, `group_read`, `group_write` and
+`ds_last_scanned_time`. These are not required or emitted by this test. Scanner
+permission metadata is not an effective SMB/NFS ACL authorization check, and the
+timestamp's format/freshness semantics were not supplied. The normalized JSON
+object in the notes was explicitly a proposed lab schema, not a native API
+response; this implementation does not mistake it for the wire schema.
 
-**Current adapter constraint:** pagination must use zero-based item offset and
-limit in the request body and an exact integer total in the response. It advances
-by actual returned rows, checks all pages, rejects duplicate identities/changing
-totals/truncation, and stops at `MaxPages`. Cursor, page-number, query-string or
-approximate-total pagination needs a separately validated adapter. The presence
-of this mechanism does not prove these are the deployed v1.56 semantics.
+The script checks all pages, rejects duplicate identities/changing totals/
+truncation, and stops at `MaxPages`. The historical example begins at index zero;
+multi-page advancement is covered offline and still needs a live test with more
+than one page. Object-valued or approximate totals are rejected, not coerced.
+
+## Verify repository identity, then search
+
+Inspect the deployed v1.56 schema or a response privately to identify a stable
+repository ID field within each `files` record. The supplied notes do not name
+that field. Set `-RepositoryPointer` to its JSON pointer and
+`-ExpectedRepository` to the exact expected ID string. Do not use the filename,
+file ID, or a human display label as a substitute for repository identity.
+
+Pointers use `/` between object keys (`~1` escapes `/`, `~0` escapes `~`). Only
+object-key traversal is supported, not arrays. The selected repository value
+must currently be a nonempty string. If the actual ID is numeric or the record
+does not include repository identity, obtain the documented mapping and adapt
+the validator/tests before use; do not bypass the check. There is no default
+repository field, no automatic discovery, and no contract file to configure.
+
+The following example uses an explicit **placeholder** pointer. Replace it,
+the fictional path and repository value before running:
 
 ```powershell
 ./scripts/Test-DataClassificationApi.ps1 `
     -BaseUrl 'https://classification.example.invalid' `
     -AgentId '<your-agent-id>' `
-    -ContractPath './.local-classification/instance-contract.json' `
+    -FindQuery 'customers.csv' `
+    -RepositoryPointer '/REPLACE_WITH_VERIFIED_REPOSITORY_ID_FIELD' `
     -ExpectedPath '/synthetic/Project-A/customers.csv' `
-    -ExpectedRepository 'synthetic-repository' -PageSize 100 -MaxPages 100
+    -ExpectedRepository 'synthetic-repository' -PageSize 10 -MaxPages 100
 ```
 
-Replace the fictional identity values with the exact strings returned by your
-instance. Repeat with the product-info query and exact identity. Pass an existing
+Repeat with `-FindQuery 'product-info.txt'` and its exact identity. Pass an existing
 SecureString to both calls if desired; dispose it afterwards. Search is a
 **read-only POST** to `/api/v1.56/search/files`. No content retrieval occurs.
 
@@ -198,6 +224,11 @@ repositories. The script requires one exact, case-sensitive ordinal path plus
 repository pair across the complete result set. It does not normalize separators,
 case, aliases, mount paths or symlinks. If canonicalization is required, implement
 and validate it in trusted code. Never select the first substring match.
+
+The recovered notes explicitly describe a path different from the earlier lab
+dataset location. Resolve that discrepancy using the actual returned identity;
+do not assume files with the same basename are the same dataset. Environment
+paths from the notes have been replaced with fictional paths in public fixtures.
 
 Only `Lookup`, `ApiVersion`, `status`, and the two counts are emitted. No paths,
 repository IDs, owners, SIDs, pattern values or file contents are returned. The
@@ -233,16 +264,19 @@ pwsh -NoProfile -File tests/Test-DataClassificationApi.ps1
 
 The dependency-free suite mocks HTTP, checks request construction, exhausts
 multiple pages, verifies exact matching/redaction, and exercises fail-closed
-cases. Fixtures contain fictional identities and a minimal transcription of
-owner-reported counts. They prove adapter behavior, not API compatibility.
+cases. Request fixtures come from the recovered transcript. Response fixtures
+are reconstructed using the recorded field names and owner-reported counts,
+with fictional paths and an explicitly artificial `fixture_repository_id` key.
+They are not raw captures and do not establish the native repository field.
 
 Before marking this lab reproduction verified:
 
-- Supply and independently inspect the sanitized successful v1.56 request and
-  response shape; replace the synthetic contract with a clearly attributed,
-  sanitized contract fixture and any necessary adapter changes.
+- Confirm the native repository ID field/type, then test the exact path/repository
+  match. Do not use the artificial fixture field against NetApp.
 - Run options and both exact-file searches against the lab; record version and
   actual test date, and confirm counts/status without inventing a prior run date.
+- Exercise multiple pages and verify `fromIndex` advancement and exact
+  `total_hits` behavior against the deployed version.
 - Review only allowlisted metadata. Remove tokens, refresh tokens, cookies,
   private addresses/hostnames, real usernames/SIDs, repository IDs, absolute
   environment paths and pattern values. Never commit raw responses, HAR files or

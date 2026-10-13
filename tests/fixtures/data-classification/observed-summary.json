@@ -1,5 +1,5 @@
 {
-  "provenance": "User-reported historical v1.56 results; anonymized summary, not a captured API response. Exact response envelope and identity field names are unavailable.",
+  "provenance": "User-reported historical v1.56 results; anonymized summary, not a captured API response. Recovered Swagger/test notes corroborate customers counts and name file_name/ds_extraction_status; product-info counts come from the owner's lab request. Native repository identity field remains unconfirmed.",
   "observations": [
     { "file": "customers.csv", "personal_patterns_count": 9, "sensitive_patterns_count": 0, "status": "COMPLETE" },
     { "file": "product-info.txt", "personal_patterns_count": 0, "sensitive_patterns_count": 0, "status": "COMPLETE" }

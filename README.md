@@ -2,7 +2,7 @@
 
 **Exploring data-aware access control for Agentic AI using Azure NetApp Files, NetApp Data Classification, MCP, and AI agents.**
 
-> **Project status:** Proposed learning-lab architecture with owner-reported NetApp Data Classification REST API v1.56 results and a read-only PowerShell test harness. The harness is offline-tested; live reproduction awaits the instance request/response contract. The Agent Policy Engine and end-to-end enforcement remain separate work. See the [API lab and evidence boundary](docs/deployment/06-data-classification-api.md).
+> **Project status:** Proposed learning-lab architecture with owner-reported NetApp Data Classification REST API v1.56 results and a read-only PowerShell test harness. The harness uses the recovered Swagger/test request and response fields and is offline-tested; native repository identity mapping and a live replay remain outstanding. The Agent Policy Engine and end-to-end enforcement remain separate work. See the [API lab and evidence boundary](docs/deployment/06-data-classification-api.md).
 
 > **MVP scope (current focus):** The primary research question for the MVP is: *can NetApp Data Classification provide real data classification context through its API, and can a trusted DSPM-aware policy layer use that context to decide whether an AI agent action should be allowed?* The ANF Object REST API, SMB/NFS ACL integration, and identity impersonation are useful background concepts but are **not required dependencies** for the MVP. They remain documented as deferred/future extensions (see [Section 16](#16-future-ideas)). The MVP outcomes are limited to `ALLOW` and `DENY`; `ALLOW_WITH_REDACTION` is deferred.
 
@@ -317,7 +317,7 @@ Requirements for this milestone:
 3. Deploy NetApp Data Classification manually.
 4. Scan the ANF dataset.
 5. Verify the classification results in the Data Classification UI. **Done 2026-10-01** — see [Baseline Scan — 2026-10-01](docs/testing/dataset-test-plan.md#baseline-scan--2026-10-01).
-6. Query those real classification results through the Data Classification API (Milestone 0, above). **Owner-reported v1.56 results recorded; reusable PowerShell reproduction pending the instance contract.** See the [API lab](docs/deployment/06-data-classification-api.md).
+6. Query those real classification results through the Data Classification API (Milestone 0, above). **Owner-reported v1.56 results and Swagger/test request recorded; PowerShell harness implemented, with repository identity mapping and live replay still pending.** See the [API lab](docs/deployment/06-data-classification-api.md).
 
 ### Phase 2 — Secure Agent
 
@@ -456,7 +456,7 @@ These vendor documentation entry points are starting points for implementation r
 **Confirmed and directly relevant to Milestone 0:**
 
 - [NetApp Data Classification — Learn about Data Classification](https://docs.netapp.com/us-en/data-services-data-classification/concept-classification.html): deployment model, supported data sources (confirms Azure NetApp Files is supported), and scanning concepts.
-- [NetApp Data Classification APIs](https://docs.netapp.com/us-en/data-services-data-classification/api-classification.html): **confirmed** that a REST API exists, covering Investigation, Compliance, Governance, and Configuration areas; confirms the instance exposes its own Swagger/OpenAPI reference at `https://<classification_ip>/documentation`; shows example endpoint and header shapes (`/api/{classification_version}/search/options`, `/api/{classification_version}/actions`, `Authorization: Bearer ...`, `x-agent-id`). The owner reports successful v1.56 `/search/files` calls; the full request/response contract must still be captured from the deployed instance for reproducible validation.
+- [NetApp Data Classification APIs](https://docs.netapp.com/us-en/data-services-data-classification/api-classification.html): **confirmed** that a REST API exists, covering Investigation, Compliance, Governance, and Configuration areas; confirms the instance exposes its own Swagger/OpenAPI reference at `https://<classification_ip>/documentation`; shows example endpoint and header shapes (`/api/{classification_version}/search/options`, `/api/{classification_version}/actions`, `Authorization: Bearer ...`, `x-agent-id`). The owner reports successful v1.56 `/search/files` calls; the recovered Swagger/test notes now provide the request and principal response fields. Native repository identity mapping and a live replay of the hardened client remain to be validated.
 - [Get identifiers (authentication reference linked from the API page)](https://docs.netapp.com/us-en/bluexp-automation/platform/get_identifiers.html): authentication method used by the Data Classification API.
 - [FAQ for NetApp Data Classification](https://docs.netapp.com/us-en/data-services-data-classification/faq-data-classification.html): confirms the REST API exists, confirms data is accessed via authenticated, encrypted API calls, and lists supported file types for PII detection.
 

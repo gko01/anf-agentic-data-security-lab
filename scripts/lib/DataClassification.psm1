@@ -15,22 +15,6 @@ function Get-JsonPointer {
     return ,$Value
 }
 
-function Set-JsonPointer {
-    param([System.Collections.IDictionary]$Object, [string]$Pointer, $Value)
-    if (-not $Pointer.StartsWith('/')) { throw 'Invalid contract JSON pointer.' }
-    $parts = $Pointer.Substring(1).Split('/')
-    for ($i = 0; $i -lt $parts.Count - 1; $i++) {
-        $key = $parts[$i].Replace('~1', '/').Replace('~0', '~')
-        if (-not $Object.Contains($key) -or $Object[$key] -isnot [System.Collections.IDictionary]) {
-            throw 'Pagination pointer is absent from request template.'
-        }
-        $Object = $Object[$key]
-    }
-    $key = $parts[-1].Replace('~1', '/').Replace('~0', '~')
-    if (-not $Object.Contains($key)) { throw 'Pagination pointer is absent from request template.' }
-    $Object[$key] = $Value
-}
-
 function Test-NonnegativeInteger {
     param($Value)
     return (($Value -is [int] -or $Value -is [long]) -and $Value -ge 0)
@@ -43,7 +27,8 @@ function Invoke-ClassificationLab {
         [Parameter(Mandatory)][ValidateNotNullOrEmpty()][string]$AgentId,
         [Parameter(Mandatory)][securestring]$AccessToken,
         [switch]$SmokeTestOnly,
-        [System.Collections.IDictionary]$Contract,
+        [string]$FindQuery,
+        [string]$RepositoryPointer,
         [string]$ExpectedPath,
         [string]$ExpectedRepository,
         [ValidateRange(1, 1000)][int]$PageSize = 100,
@@ -77,35 +62,32 @@ function Invoke-ClassificationLab {
         } catch { throw 'Classification options request failed. No raw response is displayed.' }
         return [pscustomobject]@{ SmokeTest = 'PASS'; ApiVersion = 'v1.56' }
     }
-    if (-not $Contract -or [string]::IsNullOrWhiteSpace($ExpectedPath) -or
-        [string]::IsNullOrWhiteSpace($ExpectedRepository)) { throw 'Search requires a contract and exact path/repository.' }
-    # Contract comes from the deployed instance, not a guessed public API schema.
-    foreach ($key in @('requestTemplate','offsetPointer','limitPointer','itemsPointer','totalPointer','pathPointer','repositoryPointer','statusPointer')) {
-        if (-not $Contract.Contains($key)) { throw 'Incomplete instance contract.' }
-    }
-    if ($Contract.requestTemplate -isnot [System.Collections.IDictionary] -or
-        -not $Contract.requestTemplate.Contains('findQuery') -or $null -eq $Contract.requestTemplate.findQuery) {
-        throw 'Request template must contain findQuery.'
-    }
-    if ($Contract.offsetPointer -eq $Contract.limitPointer -or
-        $Contract.offsetPointer -match '^/findQuery(?:/|$)' -or $Contract.limitPointer -match '^/findQuery(?:/|$)') {
-        throw 'Pagination must not overwrite findQuery or share a pointer.'
+    if ([string]::IsNullOrWhiteSpace($FindQuery) -or [string]::IsNullOrWhiteSpace($ExpectedPath) -or
+        [string]::IsNullOrWhiteSpace($ExpectedRepository)) { throw 'Search requires findQuery and exact path/repository.' }
+    # The supplied historical transcript does not identify the repository field.
+    # Require an explicit mapping instead of guessing or accepting path-only matches.
+    if ([string]::IsNullOrWhiteSpace($RepositoryPointer) -or -not $RepositoryPointer.StartsWith('/') -or
+        $RepositoryPointer -match '~(?![01])') {
+        throw 'Search requires a verified repository JSON pointer.'
     }
     $offset = 0L
     $total = $null
     $match = $null
     $seen = [System.Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     for ($page = 0; $page -lt $MaxPages; $page++) {
-        $body = $Contract.requestTemplate | ConvertTo-Json -Depth 50 | ConvertFrom-Json -AsHashtable
-        Set-JsonPointer $body $Contract.offsetPointer $offset
-        Set-JsonPointer $body $Contract.limitPointer $PageSize
+        # Swagger-derived v1.56 shape recovered from the owner's test transcript.
+        $body = @{
+            findQuery = $FindQuery
+            pagination = @{ fromIndex = $offset; size = $PageSize }
+            track_total_hits = $true
+        }
         try {
             $response = Invoke-RestMethod @request -Method Post -Uri "$api/search/files" -ContentType 'application/json' -Body ($body | ConvertTo-Json -Depth 50 -Compress)
             # Normalize PS objects to dictionaries; never output raw API records.
             $data = $response | ConvertTo-Json -Depth 100 | ConvertFrom-Json -AsHashtable
         } catch { throw 'Classification search request failed. No partial result or raw response is displayed.' }
-        $items = Get-JsonPointer $data $Contract.itemsPointer
-        $pageTotal = Get-JsonPointer $data $Contract.totalPointer
+        $items = Get-JsonPointer $data '/files'
+        $pageTotal = Get-JsonPointer $data '/total_hits'
         if ($items -isnot [array] -or -not (Test-NonnegativeInteger $pageTotal)) { throw 'Invalid page schema.' }
         if ($null -eq $total) { $total = $pageTotal }
         if ($pageTotal -ne $total -or $items.Count -gt $PageSize -or $offset + $items.Count -gt $total) {
@@ -113,15 +95,15 @@ function Invoke-ClassificationLab {
         }
         if ($items.Count -eq 0 -and $offset -lt $total) { throw 'Truncated pagination; no result is trusted.' }
         foreach ($item in $items) {
-            $path = Get-JsonPointer $item $Contract.pathPointer
-            $repository = Get-JsonPointer $item $Contract.repositoryPointer
+            $path = Get-JsonPointer $item '/file_name'
+            $repository = Get-JsonPointer $item $RepositoryPointer
             if ($path -isnot [string] -or [string]::IsNullOrWhiteSpace($path) -or
                 $repository -isnot [string] -or [string]::IsNullOrWhiteSpace($repository)) { throw 'Invalid resource identity.' }
             $identity = ConvertTo-Json -InputObject @($repository, $path) -Compress
             if (-not $seen.Add($identity)) { throw 'Duplicate resource or repeated page; no result is trusted.' }
             if ([string]::Equals($path, $ExpectedPath, [StringComparison]::Ordinal) -and
                 [string]::Equals($repository, $ExpectedRepository, [StringComparison]::Ordinal)) {
-                $status = Get-JsonPointer $item $Contract.statusPointer
+                $status = Get-JsonPointer $item '/ds_extraction_status'
                 $personal = Get-JsonPointer $item '/personal_patterns_count'
                 $sensitive = Get-JsonPointer $item '/sensitive_patterns_count'
                 if ($status -isnot [string] -or $status -cne 'COMPLETE' -or -not (Test-NonnegativeInteger $personal) -or
