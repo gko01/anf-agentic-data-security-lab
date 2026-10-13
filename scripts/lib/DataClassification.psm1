@@ -95,7 +95,8 @@ function Invoke-ClassificationLab {
         }
         if ($items.Count -eq 0 -and $offset -lt $total) { throw 'Truncated pagination; no result is trusted.' }
         foreach ($item in $items) {
-            $path = Get-JsonPointer $item '/file_name'
+            # Observed response: file_name is only a basename, not full identity.
+            $path = Get-JsonPointer $item '/remote_file_path'
             $repository = Get-JsonPointer $item $RepositoryPointer
             if ($path -isnot [string] -or [string]::IsNullOrWhiteSpace($path) -or
                 $repository -isnot [string] -or [string]::IsNullOrWhiteSpace($repository)) { throw 'Invalid resource identity.' }

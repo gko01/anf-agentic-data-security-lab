@@ -1,5 +1,5 @@
 {
-  "provenance": "User-reported historical v1.56 results; anonymized summary, not a captured API response. Recovered Swagger/test notes corroborate customers counts and name file_name/ds_extraction_status; product-info counts come from the owner's lab request. Native repository identity field remains unconfirmed.",
+  "provenance": "Historical v1.56 results corroborated by two owner-supplied PowerShell screenshots; minimal sanitized transcription, not a raw API capture or fresh run. Customers output shows HTTP 200 / Total Hits 1 and remote_file_path separate from basename file_name. Product-info table confirms 0/0 COMPLETE but shows no full path. Native repository identity remains unconfirmed.",
   "observations": [
     { "file": "customers.csv", "personal_patterns_count": 9, "sensitive_patterns_count": 0, "status": "COMPLETE" },
     { "file": "product-info.txt", "personal_patterns_count": 0, "sensitive_patterns_count": 0, "status": "COMPLETE" }

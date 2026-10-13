@@ -19,16 +19,22 @@ every purpose. `COMPLETE` does not establish freshness.
 
 **Evidence recovered:** the owner supplied prior Swagger/test notes on
 2026-10-14 containing the request body and code that reads the response fields.
-They report successful customers.csv metadata retrieval. The product-info.txt
-counts above were supplied separately by the owner in the lab request; the
-recovered notes show its test command, not its raw result. The notes reference
-screenshots, but no original Swagger images or raw response export were supplied
-for this change. This is historical lab evidence, not a fresh live execution.
+The owner subsequently supplied two PowerShell result screenshots. The customers
+result shows HTTP 200, Total Hits 1, personal/sensitive counts 9/0 and COMPLETE;
+the product-info table shows 0/0 and COMPLETE. Categories are respectively
+Miscellaneous Spreadsheets and Miscellaneous Documents. These screenshots
+corroborate both historical observations; they are not a fresh execution of this
+script or a raw JSON export. Only minimal sanitized transcriptions are committed.
+
+The detailed result also corrects the earlier notes' illustrative path example:
+`file_name` is a basename, while `remote_file_path` contains the full path.
+The script compares `ExpectedPath` against `remote_file_path` and never falls
+back to `file_name` or a guessed concatenation with `file_directory`.
 
 The script now uses that recorded v1.56 request and response shape directly.
 Offline tests check both recorded requests and reconstructed response records.
 **Remaining reproduction gap:** the repository identifier field name/type is
-absent from the notes. A verified `-RepositoryPointer` is required, with no guessed
+not established by the notes or screenshots. A verified `-RepositoryPointer` is required, with no guessed
 default or path-only fallback. The hardened script, multi-page behavior and
 repository validation still need a live replay; do not label those live-verified.
 
@@ -170,7 +176,8 @@ is a **string**, not a rules object. The client does not add unverified
 | `pagination.fromIndex` / `pagination.size` | Start at zero; advance by actual returned row count; bound page size |
 | `track_total_hits` | Always `true`, requesting an exact total |
 | `total_hits` / `files` | Nonnegative integer total and file array |
-| `file_name` | Full file path to compare with `ExpectedPath` |
+| `file_name` | Basename only; not sufficient for exact resource identity |
+| `remote_file_path` | Full path compared with `ExpectedPath`; visible in customers screenshot |
 | `personal_patterns_count` / `sensitive_patterns_count` | Nonnegative integer classification counts |
 | `ds_extraction_status` | Must equal `COMPLETE`; emitted as diagnostic `status` |
 
@@ -189,10 +196,17 @@ than one page. Object-valued or approximate totals are rejected, not coerced.
 ## Verify repository identity, then search
 
 Inspect the deployed v1.56 schema or a response privately to identify a stable
-repository ID field within each `files` record. The supplied notes do not name
-that field. Set `-RepositoryPointer` to its JSON pointer and
+repository ID field within each `files` record. Neither supplied evidence source
+establishes that field. Set `-RepositoryPointer` to its JSON pointer and
 `-ExpectedRepository` to the exact expected ID string. Do not use the filename,
 file ID, or a human display label as a substitute for repository identity.
+
+The detailed screenshot contains `repository_type` (CIFS Volume), `environment`,
+`environment_type`, `device_full_hostname`, and `ds_scan_task_name`. Their presence
+does not establish a globally unique, stable repository ID. In particular,
+`repository_type` identifies a kind of repository, not a specific repository.
+No one of these fields is silently substituted as identity. A future composite
+binding would need its scope, uniqueness and lifecycle verified before use.
 
 Pointers use `/` between object keys (`~1` escapes `/`, `~0` escapes `~`). Only
 object-key traversal is supported, not arrays. The selected repository value
@@ -267,7 +281,10 @@ multiple pages, verifies exact matching/redaction, and exercises fail-closed
 cases. Request fixtures come from the recovered transcript. Response fixtures
 are reconstructed using the recorded field names and owner-reported counts,
 with fictional paths and an explicitly artificial `fixture_repository_id` key.
-They are not raw captures and do not establish the native repository field.
+Both categories/counts/statuses are transcribed from screenshots. The product-info
+table does not display its full path, so that fixture path is test scaffolding,
+not an observed location. Fixtures are not raw captures and do not establish the
+native repository field. No source screenshot is committed.
 
 Before marking this lab reproduction verified:
 

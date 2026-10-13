@@ -85,7 +85,7 @@ try {
             $expected = Get-Content "$PSScriptRoot/fixtures/data-classification/$fixtureName" -Raw | ConvertFrom-Json -AsHashtable
             Set-Pages @(@{files = @((New-Record $index)); total_hits = 1})
             $p = $params.Clone(); $p.FindQuery = $expected.findQuery; $p.PageSize = 10
-            $p.ExpectedPath = $fixture.files[$index].file_name
+            $p.ExpectedPath = $fixture.files[$index].remote_file_path
             $r = Invoke-ClassificationLab @p
             $call = (& $module { ,$script:calls })[0]
             $body = $call.Body | ConvertFrom-Json -AsHashtable
@@ -106,15 +106,29 @@ try {
         Test-Case $case {
             $r = New-Record 0
             switch ($case) {
-                'wrong path' { $r.file_name = '/synthetic/Elsewhere/customers.csv' }
+                'wrong path' { $r.remote_file_path = '/synthetic/Elsewhere/customers.csv' }
                 'wrong repository' { $r.fixture_repository_id = 'another-repository' }
-                'case differs' { $r.file_name = '/synthetic/Project-A/CUSTOMERS.csv' }
-                'substring only' { $r.file_name += '.backup' }
+                'case differs' { $r.remote_file_path = '/synthetic/Project-A/CUSTOMERS.csv' }
+                'substring only' { $r.remote_file_path += '.backup' }
             }
             if ($case -eq 'no results') { Set-Pages @(@{files = @(); total_hits = 0}) }
             else { Set-Pages @(@{files = @($r); total_hits = 1}) }
             Assert-Closed $params 'No exact'
         }
+    }
+    Test-Case 'basename alone cannot satisfy full-path identity' {
+        $r = New-Record 0
+        $r.Remove('remote_file_path')
+        $r.file_name = $params.ExpectedPath
+        Set-Pages @(@{files = @($r); total_hits = 1})
+        Assert-Closed $params 'absent'
+    }
+    Test-Case 'same basename in two directories resolves by remote path' {
+        $other = New-Record 0; $other.remote_file_path = '/synthetic/Elsewhere/customers.csv'
+        $other.personal_patterns_count = 0
+        Set-Pages @(@{files = @($other); total_hits = 2}, @{files = @((New-Record 0)); total_hits = 2})
+        $r = Invoke-ClassificationLab @params
+        Assert ($r.personal_patterns_count -eq 9) 'Selected same basename from wrong directory.'
     }
     foreach ($case in @('incomplete','array status','missing count','null count','string count','negative count')) {
         Test-Case $case {
